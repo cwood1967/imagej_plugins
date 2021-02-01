@@ -2574,4 +2574,31 @@ public class SimrND2Reader extends SubResolutionFormatReader {
         }
     }
 
+    public ArrayList<Double> getStageX() {
+        ArrayList<Double> res = new ArrayList<>();
+        for (Length x : posX) {
+            res.add(x.value().doubleValue());
+        }
+        return res;
+    }
+
+    public ArrayList<Double> getStageY() {
+        ArrayList<Double> res = new ArrayList<>();
+        for (Length y : posY) {
+            res.add(y.value().doubleValue());
+        }
+        return res;
+    }
+
+    public ArrayList<Double> getStageZ() {
+        ArrayList<Double> res = new ArrayList<>();
+        for (Length z : posZ) {
+            res.add(z.value().doubleValue());
+        }
+        return res;
+    }
+
+    public CoreMetadata getCore(int i) {
+        return core.get(i, 0);
+    }
 }

@@ -8,16 +8,19 @@ import ij.ImageStack;
 import ij.measure.Calibration;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import io.scif.img.IO;
 import loci.formats.FormatException;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.image.ImageProducer;
+import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
 
 public class Nd2ImagePlus {
 
+    private static String strXpos = "dXPos";
+    private static String strYpos = "dYPos";
+    private static String strZpos = "dZPos";
+    private static String strZstep = "dZStep";
     SimrND2Reader reader;
     int nz;
     int nt;
@@ -25,6 +28,7 @@ public class Nd2ImagePlus {
     int w;
     int h;
     int bpp;
+    int nseries;
 
     boolean showProgress = false;
     private byte[] buf;
@@ -49,7 +53,7 @@ public class Nd2ImagePlus {
         nc = reader.getSizeC();
         w = reader.getSizeX();
         h = reader.getSizeY();
-
+        nseries = reader.getSeriesCount();
         bpp = reader.getBitsPerPixel()/8;
     }
 
@@ -84,12 +88,16 @@ public class Nd2ImagePlus {
         return stack;
     }
 
-    public ImagePlus getImagePlus(boolean showProgress) {
+    public ImagePlus getImagePlus(boolean showProgress, int series) {
 
         this.showProgress = showProgress;
-        imp = IJ.createHyperStack(reader.getCurrentFile(),
+        reader.setSeries(series);
+        //CoreMetadata core = reader.getCore(series);
+        File cf = new File(reader.getCurrentFile());
+        System.out.println(cf.getName());
+        imp = IJ.createHyperStack(cf.getName(),
                 w, h, nc, nz, nt, 16);
-        imp.setStack(reader.getCurrentFile(), readStack());
+        imp.setStack(cf.getName(), readStack());
 
 
         Calibration cal = new Calibration();
@@ -99,14 +107,21 @@ public class Nd2ImagePlus {
         cal.pixelDepth = reader.getTrueSizeZ();
         imp.setCalibration(cal);
 
-        try {
-            reader.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        return imp;
+        Hashtable<String, Object> meta = reader.getGlobalMetadata();
 
+        String xp = meta.get(strXpos).toString();
+        String yp = meta.get(strYpos).toString();
+        String zp = meta.get(strZpos).toString();
+        String zstep = (String)meta.get(strZstep).toString();
+        imp.setProp(strXpos, xp);
+        imp.setProp(strYpos, yp);
+        imp.setProp(strZpos, zp);
+        imp.setProp(strZstep, zstep);
+//        for (String key : meta.keySet()) {
+//            Object obj = meta.get(key);
+//            imp.setProp(key, obj.toString());
+//        }
+        return imp;
     }
 
     private byte[] readPlane(int t, int z) {
@@ -161,5 +176,18 @@ public class Nd2ImagePlus {
         }
 
         return res;
+    }
+
+    public int getSeriesCount() {
+        return reader.getSeriesCount();
+    }
+
+    public void close() {
+        try {
+            reader.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
