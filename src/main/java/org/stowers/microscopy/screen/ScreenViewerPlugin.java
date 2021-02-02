@@ -36,14 +36,14 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
     protected JFrame frame;
     protected JPanel mainPanel;
     protected JPanel panel;
-    protected JComboBox<String> colList;
-    protected JComboBox<String> rowList;
-    protected JComboBox<String> fieldList;
+    protected JComboBox<Integer> colList;
+    protected JComboBox<Integer> rowList;
+    protected JComboBox<Integer> fieldList;
     protected JButton button;
 
-    protected Vector<String> rows;
-    protected Vector<String> cols;
-    protected Vector<String> fields;
+    protected Vector<Integer> rows;
+    protected Vector<Integer> cols;
+    protected Vector<Integer> fields;
     protected HashMap<List<Integer>, List<File>> fileMap;
 
     List<File> fileList = null;
@@ -71,28 +71,25 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
     r01c01f03p01-ch3sk1fk1fl1.tiff	r02c02f02p01-ch2sk1fk1fl1.tiff
     **/
     public void parseRows() {
-       rows = new Vector<String>();
-       cols = new Vector<String>();
-       fields = new Vector<String>();
+       rows = new Vector<Integer>();
+       cols = new Vector<Integer>();
+       fields = new Vector<Integer>();
 
        fileMap = new HashMap<>();
 
        for (File f : fileList) {
            String name = f.getName();
            Integer ri = Integer.parseInt(name.substring(1,3));
-           String r = ri.toString();
-           if (!rows.contains(r)) {
-               rows.add(r);
+           if (!rows.contains(ri)) {
+               rows.add(ri);
            }
            Integer ci = Integer.parseInt(name.substring(4,6));
-           String c = ci.toString();
-           if (!cols.contains(c)) {
-               cols.add(c);
+           if (!cols.contains(ci)) {
+               cols.add(ci);
            }
            Integer fei = Integer.parseInt(name.substring(7,9));
-           String fe = fei.toString();
-           if (!fields.contains(fe)) {
-               fields.add(fe);
+           if (!fields.contains(fei)) {
+               fields.add(fei);
            }
            List<Integer> x = new ArrayList<Integer>();
            x.add(ri);
@@ -188,9 +185,9 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
     @Override
     public void actionPerformed(ActionEvent e) {
         List<Integer> x = new ArrayList<>();
-        x.add(Integer.parseInt((String)rowList.getSelectedItem()));
-        x.add(Integer.parseInt((String)colList.getSelectedItem()));
-        x.add(Integer.parseInt((String)fieldList.getSelectedItem()));
+        x.add((int)rowList.getSelectedItem());
+        x.add((int)colList.getSelectedItem());
+        x.add((int)fieldList.getSelectedItem());
         openImage(x, fileMap.get(x));
     }
 }
