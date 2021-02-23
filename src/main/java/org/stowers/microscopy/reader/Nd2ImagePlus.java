@@ -112,7 +112,10 @@ public class Nd2ImagePlus {
         String xp = meta.get(strXpos).toString();
         String yp = meta.get(strYpos).toString();
         String zp = meta.get(strZpos).toString();
-        String zstep = (String)meta.get(strZstep).toString();
+        String zstep = "None";
+        if (meta.contains(strZstep)) {
+            zstep = (String) meta.get(strZstep).toString();
+        }
         imp.setProp(strXpos, xp);
         imp.setProp(strYpos, yp);
         imp.setProp(strZpos, zp);
