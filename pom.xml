@@ -12,7 +12,7 @@
 
     <groupId>org.stowers.microscopy</groupId>
     <artifactId>simr_cjw_plugins</artifactId>
-    <version>0.01</version>
+    <version>0.02</version>
 
     <properties>
         <main-class>org.stowers.microscopy.Main</main-class>
