@@ -1,9 +1,8 @@
-package org.stowers.microscopy.ij1plugins;
+package org.stowers.microscopy;
 
 /**
  * Created by cjw on 6/22/16.
  */
-
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
