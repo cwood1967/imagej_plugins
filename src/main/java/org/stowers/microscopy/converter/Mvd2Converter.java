@@ -18,7 +18,7 @@ import ome.xml.model.primitives.PositiveInteger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import org.stowers.microscopy.ij1plugins.FastFileSaver;
+import org.stowers.microscopy.FastFileSaver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
