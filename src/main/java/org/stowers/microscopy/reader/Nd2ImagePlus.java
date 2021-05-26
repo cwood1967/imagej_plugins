@@ -6,6 +6,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.Calibration;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 import loci.formats.FormatException;
@@ -25,6 +26,7 @@ public class Nd2ImagePlus {
     int nz;
     int nt;
     int nc;
+    int pnz; // number of z considering projection
     int w;
     int h;
     int bpp;
@@ -34,8 +36,13 @@ public class Nd2ImagePlus {
     private byte[] buf;
     ImagePlus imp = null;
     ImageStack stack = null;
-    public Nd2ImagePlus(String imagefilename) {
 
+    String projection;
+    boolean is_proj;
+
+    public Nd2ImagePlus(String imagefilename, String projection) {
+
+        this.projection = projection;
         reader = new SimrND2Reader();
         try {
             reader.initFile(imagefilename);
@@ -48,6 +55,7 @@ public class Nd2ImagePlus {
             e.printStackTrace();
             return;
         }
+
         nz = reader.getSizeZ();
         nt = reader.getSizeT();
         nc = reader.getSizeC();
@@ -55,37 +63,80 @@ public class Nd2ImagePlus {
         h = reader.getSizeY();
         nseries = reader.getSeriesCount();
         bpp = reader.getBitsPerPixel()/8;
+
+        if (projection.equals("None")) {
+            pnz = nz;
+            this.is_proj = false;
+        } else {
+            pnz = 1;
+            this.is_proj = true;
+        }
     }
 
 
     public ImageStack readStack() {
 
-        int size = nt * nz * nc;
+        int size = nt * pnz * nc;
         stack = new ImageStack(w, h, size);
 
         int pindex = 0;
         buf = new byte[bpp*nc*w*h];
+        int pjz;
+
         for (int jt = 0; jt < nt; jt++) {
+
+            float[][] pStack = new float[nc][w*h];
             for (int jz = 0; jz < nz; jz++) {
                 byte[] rawplane = readPlane(jt, jz);
-                //short[] ivplane = bytesToShort(rawplane);
                 short[][] cplane = unInterLeave(rawplane);
 
-                int stack_index = jt * nz * nc + jz * nc;
-                for (int jc = 0; jc < nc; jc++) {
-                    ImageProcessor _ip = new ShortProcessor(w, h);
-                    _ip.setPixels(cplane[jc]);
-                    stack.setProcessor(_ip, stack_index + jc + 1);
-                    //System.out.print(jc + " " + (stack_index + jc + 1));
-                    //System.out.println(" " + jt + " " + jz + " " + stack_index);
-                    if (showProgress) {
-                        IJ.showProgress(pindex, size);
-                        pindex++;
+
+
+                if (!is_proj) {
+                    int stack_index = jt * nz * nc + jz * nc;
+                    for (int jc = 0; jc < nc; jc++) {
+                        ImageProcessor _ip = new ShortProcessor(w, h);
+                        _ip.setPixels(cplane[jc]);
+                        stack.setProcessor(_ip, stack_index + jc + 1);
+                        //System.out.print(jc + " " + (stack_index + jc + 1));
+                        //System.out.println(" " + jt + " " + jz + " " + stack_index);
+                        if (showProgress) {
+                            IJ.showProgress(pindex, size);
+                            pindex++;
+                        }
                     }
+                } else {
+                    pStack = projPlane(cplane, pStack);
+                }
+            }
+
+            if (is_proj) {
+                int stack_index = jt * nc;
+                for (int jc = 0; jc < nc; jc++) {
+                    ImageProcessor _ip = new FloatProcessor(w, h);
+                    _ip.setPixels(pStack[jc]);
+                    stack.setProcessor(_ip, stack_index + jc + 1);
                 }
             }
         }
         return stack;
+    }
+
+    private float[][] projPlane(short[][] cplane, float[][] projStack) {
+
+        for (int i = 0; i < cplane.length; i++) {
+            short[] v = cplane[i];
+            for (int j = 0; j < v.length; j++) {
+                if (projection.equals("MAX")) {
+                    if (cplane[i][j] > projStack[i][j]) {
+                        projStack[i][j] = cplane[i][j];
+                    }
+                } else {
+                    projStack[i][j] += cplane[i][j];
+                }
+            }
+        }
+        return projStack;
     }
 
     public ImagePlus getImagePlus(boolean showProgress, int series) {
@@ -96,7 +147,7 @@ public class Nd2ImagePlus {
         File cf = new File(reader.getCurrentFile());
         System.out.println(cf.getName());
         imp = IJ.createHyperStack(cf.getName(),
-                w, h, nc, nz, nt, 16);
+                w, h, nc, pnz, nt, 16);
         imp.setStack(cf.getName(), readStack());
 
 

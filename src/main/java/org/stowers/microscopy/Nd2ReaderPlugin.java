@@ -15,8 +15,11 @@ import ij.gui.GenericDialog;
 @Plugin(type = Command.class, name = "SIMR Nd2Reader",  menuPath="Plugins>Stowers>Chris>SIMR Nd2 Reader")
 public class Nd2ReaderPlugin implements Previewable, Command {
 
-    @Parameter()
+    @Parameter
     File imagefile;
+
+    @Parameter(label="Projection Type", choices={"None", "MAX", "SUM"})
+    String projection_choice = "None";
 
     @Parameter
     private UIService uis;
@@ -24,11 +27,13 @@ public class Nd2ReaderPlugin implements Previewable, Command {
     int series = -2;
 
     private Nd2ImagePlus nd2 = null;
-
+    private String projection;
     @Override
     public void run() {
         System.out.println(imagefile.getAbsolutePath());
-        nd2 = new Nd2ImagePlus(imagefile.getAbsolutePath());
+        System.out.println(projection_choice);
+
+        nd2 = new Nd2ImagePlus(imagefile.getAbsolutePath(), projection_choice);
         if (nd2.getSeriesCount()> 1) {
             System.out.println("N Series " + nd2.getSeriesCount());
             while (series == -2) {
