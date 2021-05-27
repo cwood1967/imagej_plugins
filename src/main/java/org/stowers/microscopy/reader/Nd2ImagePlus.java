@@ -1,6 +1,6 @@
 package org.stowers.microscopy.reader;
 
-
+import java.lang.Thread;
 import com.drew.imaging.ImageProcessingException;
 import ij.IJ;
 import ij.ImagePlus;
@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.concurrent.ExecutionException;
 
 public class Nd2ImagePlus {
 
@@ -74,52 +75,57 @@ public class Nd2ImagePlus {
     }
 
 
-    public ImageStack readStack() {
+    public ImageStack readStack() throws InterruptedException {
 
         int size = nt * pnz * nc;
         stack = new ImageStack(w, h, size);
 
-        int pindex = 0;
+        final int[] pindex = {0};
         int psize = nt*nz*nc;
         buf = new byte[bpp*nc*w*h];
         int pjz;
 
         for (int jt = 0; jt < nt; jt++) {
+            final int _jt = jt;
+            Thread zthread = new Thread() {
+                float[][] pStack = new float[nc][w * h];
 
+                public void run() {
+                    for (int jz = 0; jz < nz; jz++) {
+                        byte[] rawplane = readPlane(_jt, jz);
+                        short[][] cplane = unInterLeave(rawplane);
 
-            float[][] pStack = new float[nc][w*h];
-            for (int jz = 0; jz < nz; jz++) {
-                byte[] rawplane = readPlane(jt, jz);
-                short[][] cplane = unInterLeave(rawplane);
+                        if (!is_proj) {
+                            int stack_index = _jt * nz * nc + jz * nc;
+                            for (int jc = 0; jc < nc; jc++) {
+                                ImageProcessor _ip = new ShortProcessor(w, h);
+                                _ip.setPixels(cplane[jc]);
+                                stack.setProcessor(_ip, stack_index + jc + 1);
+                                //System.out.print(jc + " " + (stack_index + jc + 1));
+                                //System.out.println(" " + jt + " " + jz + " " + stack_index);
+                            }
+                        } else {
+                            pStack = projPlane(cplane, pStack);
+                        }
 
-
-                if (!is_proj) {
-                    int stack_index = jt * nz * nc + jz * nc;
-                    for (int jc = 0; jc < nc; jc++) {
-                        ImageProcessor _ip = new ShortProcessor(w, h);
-                        _ip.setPixels(cplane[jc]);
-                        stack.setProcessor(_ip, stack_index + jc + 1);
-                        //System.out.print(jc + " " + (stack_index + jc + 1));
-                        //System.out.println(" " + jt + " " + jz + " " + stack_index);
+                        if (showProgress) {
+                            IJ.showProgress(pindex[0], psize);
+                            pindex[0] += nc;
+                        }
                     }
-                } else {
-                    pStack = projPlane(cplane, pStack);
-                }
 
-                if (showProgress) {
-                    IJ.showProgress(pindex, psize);
-                    pindex += nc;
+                    if (is_proj) {
+                        int stack_index = _jt * nc;
+                        for (int jc = 0; jc < nc; jc++) {
+                            ImageProcessor _ip = new FloatProcessor(w, h);
+                            _ip.setPixels(pStack[jc]);
+                            stack.setProcessor(_ip, stack_index + jc + 1);
+                        }
+                    }
                 }
-            }
-
-            if (is_proj) {
-                int stack_index = jt * nc;
-                for (int jc = 0; jc < nc; jc++) {
-                    ImageProcessor _ip = new FloatProcessor(w, h);
-                    _ip.setPixels(pStack[jc]);
-                    stack.setProcessor(_ip, stack_index + jc + 1);
-                }
-            }
+            };
+            zthread.start();
+            zthread.join();
         }
         return stack;
     }
@@ -150,7 +156,12 @@ public class Nd2ImagePlus {
         System.out.println(cf.getName());
         imp = IJ.createHyperStack(cf.getName(),
                 w, h, nc, pnz, nt, 16);
-        imp.setStack(cf.getName(), readStack());
+        try {
+            imp.setStack(cf.getName(), readStack());
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
 
 
         Calibration cal = new Calibration();
