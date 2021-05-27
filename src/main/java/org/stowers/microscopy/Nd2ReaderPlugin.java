@@ -18,7 +18,6 @@ public class Nd2ReaderPlugin implements Previewable, Command {
     @Parameter
     File imagefile;
 
-    @Parameter(label="Projection Type", choices={"None", "MAX", "SUM"})
     String projection_choice = "None";
 
     @Parameter

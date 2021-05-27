@@ -80,16 +80,17 @@ public class Nd2ImagePlus {
         stack = new ImageStack(w, h, size);
 
         int pindex = 0;
+        int psize = nt*nz*nc;
         buf = new byte[bpp*nc*w*h];
         int pjz;
 
         for (int jt = 0; jt < nt; jt++) {
 
+
             float[][] pStack = new float[nc][w*h];
             for (int jz = 0; jz < nz; jz++) {
                 byte[] rawplane = readPlane(jt, jz);
                 short[][] cplane = unInterLeave(rawplane);
-
 
 
                 if (!is_proj) {
@@ -100,13 +101,14 @@ public class Nd2ImagePlus {
                         stack.setProcessor(_ip, stack_index + jc + 1);
                         //System.out.print(jc + " " + (stack_index + jc + 1));
                         //System.out.println(" " + jt + " " + jz + " " + stack_index);
-                        if (showProgress) {
-                            IJ.showProgress(pindex, size);
-                            pindex++;
-                        }
                     }
                 } else {
                     pStack = projPlane(cplane, pStack);
+                }
+
+                if (showProgress) {
+                    IJ.showProgress(pindex, psize);
+                    pindex += nc;
                 }
             }
 
