@@ -68,8 +68,9 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
 
     /*
     r01c01f02p01-ch1sk1fk1fl1.tiff	r02c02f02p01-ch1sk1fk1fl1.tiff
+    0123456789012345
     r01c01f03p01-ch3sk1fk1fl1.tiff	r02c02f02p01-ch2sk1fk1fl1.tiff
-    **/
+    */
     public void parseRows() {
        rows = new Vector<Integer>();
        cols = new Vector<Integer>();
@@ -151,12 +152,20 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
 
         Collections.sort(files);
         ImageStack stack = new ImageStack();
+        ArrayList<String> channel_names = new ArrayList();
         for (File f : files) {
             String fname = f.getAbsolutePath();
             ImageProcessor _ip = IJ.openImage(fname).getProcessor();
             stack.addSlice(_ip);
+            String ch = f.getName().substring(13,16);
+            if (!channel_names.contains(ch)) {
+                channel_names.add(ch);
+            }
+
         }
 
+        int n_channels = channel_names.size();
+        int nz = stack.size()/n_channels;
         StringBuilder title = new StringBuilder();
         title.append("Row-");
         title.append(info.get(0));
@@ -164,12 +173,13 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
         title.append(info.get(1));
         title.append(" Field-");
         title.append(info.get(2));
+
         ImagePlus imp = IJ.createHyperStack(title.toString(), stack.getWidth(),
-                stack.getHeight(), stack.getSize(), 1, 1, stack.getBitDepth());
+                stack.getHeight(), n_channels, nz, 1, stack.getBitDepth());
         imp.setStack(stack);
         CompositeImage cimp = new CompositeImage(imp);
-        cimp.setChannelLut(LUT.createLutFromColor(Color.magenta), 1);
-        cimp.setChannelLut(LUT.createLutFromColor(Color.green), 2);
+        cimp.setChannelLut(LUT.createLutFromColor(Color.green), 1);
+        cimp.setChannelLut(LUT.createLutFromColor(Color.magenta), 2);
         cimp.setChannelLut(LUT.createLutFromColor(Color.gray), 3);
         cimp.setMode(cimp.COMPOSITE);
 
@@ -180,6 +190,7 @@ public class ScreenViewerPlugin implements ActionListener, Previewable, Command 
         IJ.run("Enhance Contrast", "saturated=0.35");
         cimp.setC(3);
         IJ.run("Enhance Contrast", "saturated=0.35");
+        cimp.setC(1);
     }
 
     @Override
