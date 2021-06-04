@@ -97,6 +97,7 @@ public class Nd2ImagePlus {
                     for (int jc = 0; jc < nc; jc++) {
                         ImageProcessor _ip = new FloatProcessor(w, h);
                         _ip.setPixels(cplane[jc]);
+                        _ip = _ip.convertToShortProcessor(false);
                         stack.setProcessor(_ip, stack_index + jc + 1);
                         //System.out.print(jc + " " + (stack_index + jc + 1));
                         //System.out.println(" " + jt + " " + jz + " " + stack_index);
