@@ -90,14 +90,14 @@ public class Nd2ImagePlus {
             float[][] pStack = new float[nc][w*h];
             for (int jz = 0; jz < nz; jz++) {
                 byte[] rawplane = readPlane(jt, jz);
-                short[][] cplane = unInterLeave(rawplane);
-
+                float[][] cplane = unInterLeave(rawplane);
 
                 if (!is_proj) {
                     int stack_index = jt * nz * nc + jz * nc;
                     for (int jc = 0; jc < nc; jc++) {
-                        ImageProcessor _ip = new ShortProcessor(w, h);
+                        ImageProcessor _ip = new FloatProcessor(w, h);
                         _ip.setPixels(cplane[jc]);
+                        _ip = _ip.convertToShortProcessor(false);
                         stack.setProcessor(_ip, stack_index + jc + 1);
                         //System.out.print(jc + " " + (stack_index + jc + 1));
                         //System.out.println(" " + jt + " " + jz + " " + stack_index);
@@ -124,10 +124,10 @@ public class Nd2ImagePlus {
         return stack;
     }
 
-    private float[][] projPlane(short[][] cplane, float[][] projStack) {
+    private float[][] projPlane(float[][] cplane, float[][] projStack) {
 
         for (int i = 0; i < cplane.length; i++) {
-            short[] v = cplane[i];
+            float[] v = cplane[i];
             for (int j = 0; j < v.length; j++) {
                 if (projection.equals("MAX")) {
                     if (cplane[i][j] > projStack[i][j]) {
@@ -207,8 +207,8 @@ public class Nd2ImagePlus {
         return res;
     }
 
-    protected short[][] unInterLeave(@NotNull byte[] bytes) {
-        short[][] res = new short[nc][w*h];
+    protected float[][] unInterLeave(@NotNull byte[] bytes) {
+        float[][] res = new float[nc][w*h];
 
         int inc = bpp*nc;
         int channel;
@@ -216,7 +216,7 @@ public class Nd2ImagePlus {
         int ka;
         int res1;
         int res2;
-        short pixel;
+        float pixel;
 
         for (int kp = 0; kp < bytes.length; kp += inc) {
             for (int kc = 0; kc < inc; kc += bpp) {
@@ -226,7 +226,7 @@ public class Nd2ImagePlus {
                 //pixel = bytesToShort(bytes[ka], bytes[ka + 1]);
                 res1 = (bytes[ka] & 0x00ff);
                 res2 = ((bytes[ka + 1] & 0x00ff) << 8);
-                pixel = (short)(res2 | res1);
+                pixel = (float)(res2 | res1);
                 res[channel][index] = pixel;
             }
         }
