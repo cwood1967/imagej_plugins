@@ -26,7 +26,6 @@ public class YeastBestZ_plugin implements Previewable, Command {
     //ImageStack stack = null;
     @Override
     public void run() {
-        System.out.println(transmitted_channel);
         imp.setC(transmitted_channel);
         process();
     }
@@ -49,10 +48,13 @@ public class YeastBestZ_plugin implements Previewable, Command {
 
         pimp.setStack(bestStack);
         pimp.setLut(LUT.createLutFromColor(Color.gray));
-        // pimp.setTitle(imp.getTitle() + "-" + "BestZ" + "-" + imax);
+
         ce.setUseStackHistogram(true);
         ce.setNormalize(false);
         ce.stretchHistogram(pimp, 0.35);
+        pimp.setOpenAsHyperStack(true);  
+        pimp.setProperty("Info", imp.getInfoProperty());
+        pimp.setCalibration(imp.getCalibration());
         pimp.show();
     }
 

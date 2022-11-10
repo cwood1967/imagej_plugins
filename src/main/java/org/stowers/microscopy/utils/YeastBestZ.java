@@ -51,7 +51,6 @@ public class YeastBestZ {
             ip.findEdges();
             double mx = ip.getStatistics().mean;
             zprofile[i - 1] = mx;
-            System.out.println(mx);
 
         }
 
@@ -67,7 +66,7 @@ public class YeastBestZ {
                 // imax = i + 1;
             }
         }
-        System.out.println("Argmax" + " " + argmax);      
+        System.out.println("Best Z for frame i:  " + argmax);
         return argmax;
     }
 
