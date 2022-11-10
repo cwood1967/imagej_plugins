@@ -13,50 +13,55 @@ import org.scijava.command.Previewable;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import org.stowers.microscopy.reader.Nd2ImagePlus;
 
-import java.awt.*;
-import java.io.File;
+public class YeastBestZ {
+   
+    int nc;
+    int nz;
+    int nt;
+    int width;
+    int height;
 
-import ij.gui.GenericDialog;
+    ImagePlus imp = null;
+    ImageStack stack = null;
 
-@Plugin(type = Command.class, name = "Yeast Best Z",  menuPath="Plugins>Stowers>Chris>Yeast Best Z")
-public class YeastBestZ implements Previewable, Command {
+    public YeastBestZ(ImagePlus imp) {
+        this.imp = imp;
 
-    @Parameter(label="Transmitted Light Channel")
-    int transmitted_channel = 3;
+        nc = imp.getNChannels();
+        nz = imp.getNSlices(); // the number of z slices
+        nt = imp.getNFrames(); //the number of time frames
+        width = imp.getWidth();
+        height = imp.getHeight();
+        stack = imp.getImageStack();
 
-    @Parameter
-    ImagePlus imp;
-
-    ContrastEnhancer ce = new ContrastEnhancer();
-    //ImageStack stack = null;
-    @Override
-    public void run() {
-        System.out.println(transmitted_channel);
-        imp.setC(transmitted_channel);
-        ImageStack stack = imp.getStack();
-        process();
     }
-
-    protected void process() {
-
-        int nc = imp.getNChannels();
-        int nz = imp.getNSlices(); // the number of z slices
-
-        ImageStack stack = imp.getStack();
-        ImageStack pstack = new ImageStack(imp.getWidth(), imp.getHeight(), nz);
-
+   
+    public ImageStack process(int channel) {
+        ImageStack best_stack = new ImageStack(width, height, nt);
+       
+        for (int i=1; i <=nt; i++) {
+            int zb = calcFrameBest(channel, i);            
+            int zb_slice = imp.getStackIndex(channel, zb, i);
+            ImageProcessor zimp = stack.getProcessor(zb_slice);
+            best_stack.setProcessor(zimp, i);
+            
+        }    
+        return best_stack;
+    }
+    // remember imagej is sometimes 1 based (most of the time)
+    public int calcFrameBest(int channel, int frame) {
+       
         double[] zprofile = new double[nz];
-        ImagePlus pimp = new ImagePlus();
 
         for (int i = 1; i <= nz; i++) {
-            int index = imp.getStackIndex(transmitted_channel, i, 1);
+            int index = imp.getStackIndex(channel, i, frame);
             ImageProcessor ip = stack.getProcessor(index).duplicate();
             ip.blurGaussian(1.);
             ip.findEdges();
             double mx = ip.getStatistics().mean;
             zprofile[i - 1] = mx;
+            System.out.println(mx);
 
         }
 
@@ -64,24 +69,16 @@ public class YeastBestZ implements Previewable, Command {
 
         double dmax = -Double.MAX_VALUE;
         int argmax = 0;
-        int imax = 0;
+        // int imax = 0;
         for (int i = 0; i < d2.length; i++) {
             if (d2[i] > dmax) {
                 dmax = d2[i];
-                argmax = imp.getStackIndex(transmitted_channel, i + 1, 1);
-                imax = i + 1;
+                argmax = i + 1; //imp.getStackIndex(channel, i + 1, frame);
+                // imax = i + 1;
             }
         }
-        pimp.setProcessor(stack.getProcessor(argmax));
-        pimp.setLut(LUT.createLutFromColor(Color.gray));
-        pimp.setTitle(imp.getTitle() + "-" + "BestZ" + "-" + imax);
-        ce.setUseStackHistogram(false);
-        ce.setNormalize(false);
-        ce.stretchHistogram(pimp, 0.35);
-        pimp.show();
-
-
-
+        System.out.println("Argmax" + " " + argmax);      
+        return argmax;
     }
 
     protected double[] deriv(double[] profile) {
@@ -107,15 +104,5 @@ public class YeastBestZ implements Previewable, Command {
         }
 
         return d;
-    }
-
-    @Override
-    public void preview() {
-
-    }
-
-    @Override
-    public void cancel() {
-
     }
 }
