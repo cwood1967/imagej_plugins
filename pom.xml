@@ -6,13 +6,18 @@
     <parent>
         <groupId>org.scijava</groupId>
         <artifactId>pom-scijava</artifactId>
-        <version>31.1.0</version>
+        <version>33.2.0</version>
         <relativePath />
     </parent>
 
     <groupId>org.stowers.microscopy</groupId>
     <artifactId>simr_cjw_plugins</artifactId>
     <version>0.02</version>
+    
+    <name>simr plugins cjw</name>
+    <description>Stowers Institute plugin by Chris Wood</description>
+    <url>https://github.com/cwood1967/imagej_plugins</url>
+    <inceptionYear>2020</inceptionYear> 
 
     <properties>
         <main-class>org.stowers.microscopy.Main</main-class>
@@ -61,36 +66,26 @@
         </plugins>
     </build>
     <dependencies>
+        <!-- 
         <dependency>
             <groupId>fr.inra.ijpb</groupId>
             <artifactId>MorphoLibJ_</artifactId>
             <version>1.4.2.1</version>
         </dependency>
-        <dependency>
-            <groupId>sc.fiji</groupId>
-            <artifactId>TurboReg_</artifactId>
-            <version>2.0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
+        -->
+        <!-- <dependency>
             <groupId>ome</groupId>
             <artifactId>bioformats_package</artifactId>
-            <version>LATEST</version>
+            <version>6.11.0</version>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>net.imagej</groupId>
+            <artifactId>ij</artifactId>
         </dependency>
         <dependency>
             <groupId>net.imglib2</groupId>
             <artifactId>imglib2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.imglib2</groupId>
-            <artifactId>imglib2-algorithm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.imglib2</groupId>
-            <artifactId>imglib2-algorithm-fft</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.imglib2</groupId>
-            <artifactId>imglib2-algorithm-gpl</artifactId>
         </dependency>
         <dependency>
             <groupId>net.imglib2</groupId>
@@ -100,11 +95,6 @@
             <groupId>net.imglib2</groupId>
             <artifactId>imglib2-realtransform</artifactId>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>net.imglib2</groupId>-->
-        <!--<artifactId>imglib2</artifactId>-->
-        <!--&lt;!&ndash;<version>3.2.0</version>&ndash;&gt;-->
-        <!--</dependency>-->
         <dependency>
             <groupId>net.imagej</groupId>
             <artifactId>imagej</artifactId>

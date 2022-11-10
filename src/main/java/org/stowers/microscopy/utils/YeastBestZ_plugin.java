@@ -3,22 +3,14 @@ package org.stowers.microscopy.utils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.plugin.LutLoader;
-import ij.process.ImageProcessor;
 import ij.plugin.ContrastEnhancer;
-import ij.process.FloatProcessor;
 import ij.process.LUT;
 import org.scijava.command.Command;
 import org.scijava.command.Previewable;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-import org.stowers.microscopy.reader.Nd2ImagePlus;
 
 import java.awt.*;
-import java.io.File;
-
-import ij.gui.GenericDialog;
 
 @Plugin(type = Command.class, name = "Yeast Best Z",
         menuPath="Plugins>Stowers>Chris>Yeast Best Z")
@@ -36,7 +28,6 @@ public class YeastBestZ_plugin implements Previewable, Command {
     public void run() {
         System.out.println(transmitted_channel);
         imp.setC(transmitted_channel);
-        ImageStack stack = imp.getStack();
         process();
     }
 
@@ -63,15 +54,10 @@ public class YeastBestZ_plugin implements Previewable, Command {
         ce.setNormalize(false);
         ce.stretchHistogram(pimp, 0.35);
         pimp.show();
-
-
-
     }
-
 
     @Override
     public void preview() {
-
     }
 
     @Override
