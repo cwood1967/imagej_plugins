@@ -1,7 +1,10 @@
 package org.stowers.microscopy.utils;
 
+import ij.IJ;
 import ij.ImagePlus;
+import ij.CompositeImage;
 import ij.ImageStack;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
 public class YeastBestZ {
@@ -27,17 +30,62 @@ public class YeastBestZ {
 
     }
    
-    public ImageStack process(int channel) {
-        ImageStack best_stack = new ImageStack(width, height, nt);
-       
+    public ImagePlus process(int channel, String projection) {
+        ImagePlus best_imp = IJ.createHyperStack("Best", width, height, nc, 1,
+                                nt, 32);
+
+        ImageStack best_stack = best_imp.getStack(); 
+        
         for (int i=1; i <=nt; i++) {
-            int zb = calcFrameBest(channel, i);            
-            int zb_slice = imp.getStackIndex(channel, zb, i);
-            ImageProcessor zimp = stack.getProcessor(zb_slice);
-            best_stack.setProcessor(zimp, i);
+            for (int c=1; c<=nc; c++) {
+                 if (c == channel) {
+                    int zb = calcFrameBest(channel, i);            
+                    int zb_slice = imp.getStackIndex(channel, zb, i);
+                    ImageProcessor zimp = stack.getProcessor(zb_slice);
+                    int slice_in_best = best_imp.getStackIndex(channel, 1, i);
+                    best_stack.setProcessor(zimp, slice_in_best);
+                    System.out.println("best " + slice_in_best + " " + c + " " + i);
+                }    
+                else {
+                    ImageProcessor pip = project(c, i, projection);
+                    int proj_index = best_imp.getStackIndex(c, 1, i);
+                    System.out.println(proj_index + " " + c + " " + i);
+                    best_stack.setProcessor(pip, proj_index);
+                }
+            }
+        }
+
+        best_imp.setStack(best_stack);
+        return best_imp;
+    }
+    
+
+    public ImageProcessor project(int c, int t, String projection) {
+
+        float[] jpixels = new float[width*height];
+        for (int z=1 ; z<=nz; z++) {
+            int index = imp.getStackIndex(c, z, t);
+            float[] fpix = (float[])imp.getStack().getProcessor(index).convertToFloatProcessor().getPixels();
             
-        }    
-        return best_stack;
+            for (int j=0; j<fpix.length; j++) {
+                if (projection == "MAX") {
+                    if (fpix[j] > jpixels[j]) {
+                        jpixels[j] = fpix[j];
+                    }
+                }
+                else {
+                    jpixels[j] += fpix[j];
+                }
+            }
+            
+            if (projection == "MEAN") {
+                for (int i=0; i<fpix.length; i++) {
+                    jpixels[i] /= nz;
+                }
+            }
+        }
+        
+        return new FloatProcessor(width, height, jpixels);
     }
     // remember imagej is sometimes 1 based (most of the time)
     public int calcFrameBest(int channel, int frame) {
