@@ -67,6 +67,7 @@ public class YeastBestZ_plugin implements Previewable, Command {
             
             bestImp.getChannelLut().min = cmin;
             bestImp.getChannelLut().max = cmax;
+
             bestImp.getChannelProcessor().resetMinAndMax();
         }
 
@@ -80,8 +81,6 @@ public class YeastBestZ_plugin implements Previewable, Command {
             bestImp.updateAndRepaintWindow();
         }
         bestImp.setC(1);
-        System.out.println(bestImp.getProcessor().getPixel(56, 34));
-        System.out.println(bestImp.getStack().getProcessor(1).getPixel(56, 34));
     }
 
     @Override

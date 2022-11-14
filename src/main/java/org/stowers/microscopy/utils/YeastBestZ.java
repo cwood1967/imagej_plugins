@@ -41,15 +41,14 @@ public class YeastBestZ {
                  if (c == channel) {
                     int zb = calcFrameBest(channel, i);            
                     int zb_slice = imp.getStackIndex(channel, zb, i);
-                    ImageProcessor zimp = stack.getProcessor(zb_slice);
+                    ImageProcessor zip = stack.getProcessor(zb_slice);
+                    zip.setMinAndMax(zip.getStatistics().min, zip.getStatistics().max);
                     int slice_in_best = best_imp.getStackIndex(channel, 1, i);
-                    best_stack.setProcessor(zimp, slice_in_best);
-                    System.out.println("best " + slice_in_best + " " + c + " " + i);
+                    best_stack.setProcessor(zip, slice_in_best);
                 }    
                 else {
                     ImageProcessor pip = project(c, i, projection);
                     int proj_index = best_imp.getStackIndex(c, 1, i);
-                    System.out.println(proj_index + " " + c + " " + i);
                     best_stack.setProcessor(pip, proj_index);
                 }
             }
@@ -68,7 +67,7 @@ public class YeastBestZ {
             float[] fpix = (float[])imp.getStack().getProcessor(index).convertToFloatProcessor().getPixels();
             
             for (int j=0; j<fpix.length; j++) {
-                if (projection == "MAX") {
+                if (projection.equals("MAX")) {
                     if (fpix[j] > jpixels[j]) {
                         jpixels[j] = fpix[j];
                     }
@@ -78,15 +77,18 @@ public class YeastBestZ {
                 }
             }
             
-            if (projection == "MEAN") {
-                for (int i=0; i<fpix.length; i++) {
-                    jpixels[i] /= nz;
-                }
+        }
+        if (projection.equals("MEAN")) {
+            for (int i=0; i < jpixels.length; i++) {
+                jpixels[i] /= nz;
             }
         }
         
-        return new FloatProcessor(width, height, jpixels);
+        FloatProcessor fip = new FloatProcessor(width, height, jpixels); 
+        fip.setMinAndMax(fip.getStatistics().min, fip.getStatistics().max);
+        return fip;
     }
+
     // remember imagej is sometimes 1 based (most of the time)
     public int calcFrameBest(int channel, int frame) {
        
@@ -94,7 +96,8 @@ public class YeastBestZ {
 
         for (int i = 1; i <= nz; i++) {
             int index = imp.getStackIndex(channel, i, frame);
-            ImageProcessor ip = stack.getProcessor(index).duplicate();
+            FloatProcessor _ip = stack.getProcessor(index).convertToFloatProcessor();
+            FloatProcessor ip = (FloatProcessor)_ip.duplicate();
             ip.blurGaussian(1.);
             ip.findEdges();
             double mx = ip.getStatistics().mean;
@@ -114,7 +117,7 @@ public class YeastBestZ {
                 // imax = i + 1;
             }
         }
-        System.out.println("Best Z for frame i:  " + argmax);
+        System.out.println("Best Z for frame " + frame + ":  " + argmax);
         return argmax;
     }
 
